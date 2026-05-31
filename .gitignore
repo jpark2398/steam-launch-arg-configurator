@@ -1,0 +1,21 @@
+# --- Python Specific ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# --- Project Environments ---
+env/
+venv/
+.venv/
+.env
+
+# --- Build Artifacts ---
+build/
+dist/
+*.spec
+
+# --- IDE Settings ---
+.vscode/
+.idea/
+.DS_Store
