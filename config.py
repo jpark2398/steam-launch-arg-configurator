@@ -2,8 +2,8 @@ import os
 import sys
 import json
 
-# Standardize path: ~/.config/steam-arg-util
-USER_CONFIG_DIR = os.path.expanduser("~/.config/steam-arg-util")
+# Standardize path: ~/.config/steam-launch-arg-configurator
+USER_CONFIG_DIR = os.path.expanduser("~/.config/steam-launch-arg-configurator")
 os.makedirs(USER_CONFIG_DIR, exist_ok=True)
 
 # Define file and directory paths within that config folder

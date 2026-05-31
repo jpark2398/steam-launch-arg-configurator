@@ -1,0 +1,36 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*' # Triggers when you push a tag like v1.0.0
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4 # Keep v4, but ensure it's up to date
+        
+      - name: Set up Python
+        uses: actions/setup-python@v5 # Updated from v4 to v5
+        with:
+          python-version: '3.10'
+          
+      - name: Install dependencies
+        run: pip install -r requirements.txt pyinstaller
+        
+      - name: Build with PyInstaller
+        run: |
+          pyinstaller --noconfirm --onefile --windowed --add-data "ui:ui" --add-data "utils:utils" --add-data "icon.png:." --collect-all PIL main.py
+          mv dist/main dist/steam-launch-arg-configurator
+          
+      - name: Create Release
+        uses: softprops/action-gh-release@v2 # Updated from v1 to v2
+        with:
+          files: dist/steam-launch-arg-configurator
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
