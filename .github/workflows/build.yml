@@ -25,7 +25,7 @@ jobs:
         
       - name: Build with PyInstaller
         run: |
-          pyinstaller --noconfirm --onefile --windowed --add-data "ui:ui" --add-data "utils:utils" --add-data "icon.png:." --collect-all PIL main.py
+          pyinstaller --noconfirm --onefile --windowed --add-data "ui:ui" --add-data "utils:utils" --add-data "icon.png:." --collect-all PIL --collect-all psutil main.py
           mv dist/main dist/steam-launch-arg-configurator
           
       - name: Create Release

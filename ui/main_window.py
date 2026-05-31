@@ -2,6 +2,9 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import threading
 import subprocess
+import psutil
+import time
+import shutil
 import os
 import vdf
 from PIL import Image, ImageTk
@@ -452,34 +455,69 @@ class SteamLaunchBuilder(tk.Tk):
 
 
     def apply_to_steam(self):
-        # Logic to write to VDF and restart Steam
         launch_string = self.output_var.get()
-        self.status_label.config(text="Shutting down Steam...", foreground="orange")
-        self.update()
+        
+        # 1. Check if Steam is running to prevent ghost-launches
+        steam_running = any(p.name() == "steam" for p in psutil.process_iter())
+        
+        if steam_running:
+            self.status_label.config(text="Shutting down Steam...", foreground="orange")
+            self.update()
+            
+            # Trigger graceful shutdown
+            subprocess.run(["steam", "-shutdown"], check=False)
+            
+            # Polling loop to wait for process exit
+            timeout = 30 
+            start_time = time.time()
+            
+            # Wait until no process named 'steam' is found
+            while any(p.name() == "steam" for p in psutil.process_iter()):
+                if time.time() - start_time > timeout:
+                    messagebox.showerror("Error", "Steam failed to close. Please close it manually.")
+                    self.status_label.config(text="Save failed.", foreground="red")
+                    return
+                time.sleep(1)
 
-        subprocess.run(["steam", "-shutdown"])
-        time.sleep(5) 
+        # 2. Proceed with VDF editing
+        self.status_label.config(text="Saving configuration...", foreground="orange")
+        self.update()
         
         try:
+            # Backup the VDF
             shutil.copy(self.vdf_path, self.vdf_path + ".backup")
+            
+            # Read the VDF
             with open(self.vdf_path, 'r', encoding='utf-8') as file:
                 config_data = vdf.load(file)
             
+            # Safely navigate to the apps dictionary
             root_key = list(config_data.keys())[0]    
             apps = config_data[root_key]['Software']['Valve']['Steam']['apps']
+            
             if self.selected_app_id not in apps:
                 apps[self.selected_app_id] = {}
                 
+            # Apply the new launch options
             apps[self.selected_app_id]['LaunchOptions'] = launch_string
             
+            # Write the updated VDF
             with open(self.vdf_path, 'w', encoding='utf-8') as file:
                 vdf.dump(config_data, file)
                 
+            # Update local state
             self.games_data[self.selected_app_id]['current_options'] = launch_string
+            
+            # 3. Relaunch Steam silently in the background
             self.status_label.config(text="Relaunching Steam...", foreground="orange")
             self.update()
 
-            subprocess.Popen(["steam"], start_new_session=True)
+            subprocess.Popen(
+                ["steam"], 
+                stdout=subprocess.DEVNULL, 
+                stderr=subprocess.DEVNULL, 
+                start_new_session=True
+            )
             self.status_label.config(text="Success! Configuration saved.", foreground="#4caf50")
             
         except Exception as e:
