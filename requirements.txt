@@ -1,0 +1,9 @@
+certifi==2026.5.20
+charset-normalizer==3.4.7
+idna==3.17
+pillow==12.2.0
+pyperclip==1.8.2
+requests==2.32.3
+sv-ttk==2.6.0
+urllib3==2.7.0
+vdf==3.4
